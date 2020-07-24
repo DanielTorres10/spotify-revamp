@@ -8,7 +8,14 @@ html {
       font-family: "Raleway", sans-serif;
 }
 
-
+h6 {
+    text-align: right;
+    color: #1ED760;
+    font-size: 1.4rem;
+    padding-right: 1.2rem;
+    margin: -1.2rem;
+    margin-bottom: 1.6rem;
+}
 .button {
     color: white;
     text-decoration: none;
@@ -21,7 +28,6 @@ html {
   display: inline-block;
   font-size: 1rem;
   cursor: pointer;
-  font-weight: bold;
 }
 
 
@@ -53,6 +59,51 @@ html {
 }
 
 /* Profile section */
+    /*Fixed*/
+.sidenav {
+  height: 100%;
+  width: 16rem;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  padding-top: 1.6rem;
+}
+
+.sidenav a {
+  padding: .375rem .5rem .375rem 1rem;
+  text-decoration: none;
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #f1f1f1;
+  display: block;
+  margin-top: 1rem;
+}
+
+.sidenav a:hover {
+    background-color: #585858;
+}
+
+.scrollable {
+  margin-left: 16rem; 
+  padding: 0rem .6rem;
+}
+
+
+@media screen and (max-height: 28rem) {
+  .sidenav {padding-top: 1rem;}
+  .sidenav a {font-size: 1.4rem;}
+}    
+
+.flex-container {
+    margin-top: 1rem;
+    display: flex;
+    flex: inline;
+}
+
+    /*Scrollable*/
 #prof-container {
     padding: 20px 40px 40px;
     max-width: 640px;
