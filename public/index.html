@@ -191,29 +191,23 @@
         </div>
         <div id="favorites-container">
           <h1> Favorites </h1>
-          <div id="t-s-container" >  
-            <h2> Top Songs </h2>
-            <label for="Time Range">Time Range:</label>
-			<select name="Top Songs" id="Top Songs">
+          <label for="Time Range">Time Range:</label>
+			<select name="Time-Range" id="Time-Range">
 		        <option value=-1>All Time</option>
 			    <option value=1>Past 6 Months</option>
 				<option value=0>Past Month</option>
 				</select>
 			<br><br>
+          <div id="t-s-container" >  
+            <h2> Top Songs </h2>
+
 			
             <div id="showSongs" class="songs-container"></div>
           </div>
           
           <div id="t-art-container">  
             <h2> Top Artists </h2>
-            <label for="Time Range">Time Range:</label>
-			<select name="Top Artists" id="Top Artists">
-		        <option value=-1>All Time</option>
-			    <option value=1>Past 6 Months</option>
-				<option value=0>Past Month</option>
-				</select>
-			<br><br>
-            <input type="submit" value="Submit">
+            
             <div id="showArtists" class="ta-container"></div>
           </div>
 
@@ -255,9 +249,6 @@
         var access_token = params.access_token,
             refresh_token = params.refresh_token,
             error = params.error;
-
-        var map = new Map();
-        var albumInfo = new Set();
         
         if (error) {
           alert('There was an error during the authentication');
@@ -287,23 +278,36 @@
                 }
           });
 
-           // Get top tracks(songs) info
-           var topSongsInput = document.getElementById("Top Songs")
-           var songTopUrl = '';
-            switch(topSongsInput) {
-                   case 0:
-                   songTopUrl = 'https://api.spotify.com/v1/me/top/tracks?time_range=short_term'
+        var timeRange = 'long_term';
+        load(timeRange);
+        
+        document.querySelector("#Time-Range").addEventListener("change",function(e){
+               //here code for change option
+            console.log(this.value);
+            $(".ta-container").html('');
+            $(".songs-container").html('');
+            switch(this.value) {
+                   case '0':
+                   timeRange = 'short_term'
                    break;
                 
-                   case 1:
-                   songTopUrl = 'https://api.spotify.com/v1/me/top/tracks?time_range=medium_term'
+                   case '1':
+                   timeRange = 'medium_term'
                    break;
 
                    default:
-                   songTopUrl = 'https://api.spotify.com/v1/me/top/tracks?time_range=long_term'
+                   timeRange = 'long_term'
                }
+            load(timeRange);
+        });
+
+      
+        function load(time) {
+        var map = new Map();
+        var albumInfo = new Set();
+           // Get top tracks(songs) info    
            $.ajax({ 
-                url: songTopUrl,
+                url: 'https://api.spotify.com/v1/me/top/tracks?time_range='+time,
                 type: 'GET',
                 headers: {
                   'Authorization' : 'Bearer ' + access_token
@@ -322,22 +326,8 @@
                 }
             });
            // Get top artists info
-           var topArtistsInput = document.getElementById("Top Artists")
-           var artsitTopUrl = '';
-            switch(topSongsInput) {
-                   case 0:
-                   artistTopUrl = 'https://api.spotify.com/v1/me/top/artists?time_range=short_term'
-                   break;
-                
-                   case 1:
-                   artistTopUrl = 'https://api.spotify.com/v1/me/top/artists?time_range=medium_term'
-                   break;
-
-                   default:
-                   artistTopUrl = 'https://api.spotify.com/v1/me/top/artists?time_range=long_term'
-               }
            $.ajax({
-                url: artistTopUrl,
+                url: 'https://api.spotify.com/v1/me/top/artists?time_range='+time,
                 type: 'GET',
                 headers: {
                   'Authorization' : 'Bearer ' + access_token
@@ -354,7 +344,8 @@
                   }
                 },
             });
-
+        
+        }
            // Display options to switch playbacks (Example: Web, Mobile, App)
            var clients = new Set();
            // If you're already listening to spotify, it will show you the active clients
@@ -881,7 +872,6 @@
             }
           // Edit Top Songs Design Here!!!!
           } else if(id==="#showSongs") {
-              $(".songs-item").empty();
               type ='top song'
               if(items[i].album.images[0]) {     
                 $(id).append(             
@@ -958,7 +948,6 @@
             }
           // Edit Top Artists Design Here!!!!
           } else if (id==="#showArtists") {
-            $(".ta-container").empty();
             type='artists';
             if(items[i].images[0]) {
             $(id).append(                
