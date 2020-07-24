@@ -126,8 +126,8 @@ html {
 
 /* Favorites section */
 #favorites-container {
-    min-width: 70%;
-    width: 70%;
+    min-width: 75%;
+    width: 75%;
     margin-right: auto;
     margin-left: auto;
 }
@@ -230,13 +230,13 @@ html {
 /* Top Songs section */
 #t-s-container {
   height: 750px;
-  width: 400px;
+  width: 310px;
   padding-bottom: 8%;
   float: left;
 }
 .songs-container {
   height: 700px;
-  width: 400px;
+  width: 310px;
   overflow-x:hidden;
   overflow-y:auto;
 }
