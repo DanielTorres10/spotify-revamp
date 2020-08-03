@@ -7,18 +7,6 @@
 
   </head>
   <body>
-    <div class="sidenav">
-        <img src="images/spotify-logo-text-white.png" alt="Spotify Logo" width="240rem" height=".6" >
-        <h6>Revamp.</h6>
-        <div class="flex-container">
-            <img src="images/icons/home-icon.PNG" class="flex-container" alt="Home Icon" width="40rem" height="45rem">
-            <a href="#loggedin">Home</a>
-        </div>
-        <div class="flex-container">
-            <img src="images/icons/play-icon.PNG" class="flex-container"  alt="Play Icon" width="30rem" height="35rem">
-            <a href="#music">Music Player</a>
-        </div>
-    </div>
       <div id="login">
         <div class="tile">
             <img src="images/spotify-icon.png" alt="Spotify Logo">
@@ -186,6 +174,19 @@
     
     <!-- PROFILE PAGE HERE -->
      <div id="loggedin">
+          
+        <div class="sidenav">
+            <img src="images/spotify-logo-text-white.png" alt="Spotify Logo" width="240rem" height=".6" >
+            <h6>Revamp.</h6>
+            <div class="flex-container">
+              <img src="images/icons/home-icon.PNG" class="flex-container" alt="Home Icon" width="40rem" height="45rem">
+              <a href="#loggedin">Home</a>
+            </div>
+            <div class="flex-container">
+              <img src="images/icons/play-icon.PNG" class="flex-container"  alt="Play Icon" width="30rem" height="35rem">
+              <a href="#music">Music Player</a>
+            </div>
+        </div>
 
         <div id="showUser"></div>
  
@@ -206,21 +207,19 @@
           <h1> Favorites </h1>
           <label for="Time Range">Time Range:</label>
 			<select name="Time-Range" id="Time-Range">
-		        <option value=-1>All Time</option>
-			    <option value=1>Past 6 Months</option>
-				<option value=0>Past Month</option>
-				</select>
+                <option value=short_term>Past Month</option>
+			    <option value=medium_term>Past 6 Months</option>
+                <option value=long_term>All Time</option>
+				
+			</select>
 			<br><br>
           <div id="t-s-container" >  
             <h2> Top Songs </h2>
-
-			
             <div id="showSongs" class="songs-container"></div>
           </div>
           
           <div id="t-art-container">  
             <h2> Top Artists </h2>
-            
             <div id="showArtists" class="ta-container"></div>
           </div>
 
@@ -242,11 +241,9 @@
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
 
     <script type="text/javascript">
-
-        /**
-         * Obtains parameters from the hash of the URL
-         * @return Object
-         */
+      /**
+        * Obtains parameters from the hash of the URL
+        */
         function getHashParams() {
           var hashParams = {};
           var e, r = /([^&;=]+)=?([^&;]*)/g,
@@ -273,55 +270,91 @@
                   'Authorization': 'Bearer ' + access_token
                 },
                 success: function(response) {
+                  $('#login').hide();
+                  $('#loggedin').show();
+                  $('#search-bar').show();
                 outputToDiv(response, 0, "#showUser");
                 }
             });
-          // Get playlists 
-          $.ajax({
-                url: 'https://api.spotify.com/v1/me/playlists',
-                type: 'GET',
-                headers: {
-                  'Authorization' : 'Bearer ' + access_token
-                },
-                contentType:"application/json",
-                success: function(response) {   
-                  var items = response.items;
-                  for(var i=0; i<items.length; i++) {
-                    outputToDiv(items, i, "#showPlaylists");
+    
+      /**
+        * Returns User's PLAYLISTS
+        * Edit Playlist design here!
+        */
+        $.ajax({
+            url: 'https://api.spotify.com/v1/me/playlists',
+            type: 'GET',
+            headers: {
+                'Authorization' : 'Bearer ' + access_token
+            },
+            contentType:"application/json",
+            success: function(response) {   
+                var items = response.items;
+                var type = 'playlist';
+                for(var i=0; i<items.length; i++) {
+                  // Has playlist cover image
+                  if(items[i].images[0]) {
+                    $('#showPlaylists').append(        
+                      "<div class='grid-item'>" +
+                        "<div class='pl-img-container'>" +
+                          "<img class='pl-img' src=" + items[i].images[0].url + "> </a>" +
+                          "<div class='pl-overlay'>" +
+                            '<button id="playlist' + i + '" onclick="playThis(\'' + i  + '\',\'' + type + '\')" class="over-text" value="' +
+                                                                                                          items[i].uri+'"> Play </button>' +
+                            '<button id="pl'+i+'" onclick="showSongs(\'' + i  + '\',\'' + type + '\')" class="over-text2" data-id="' + 
+                                                             items[i].id + '" data-name="' + items[i].name + '">Show songs</button>' +
+                            '<button id="playlist-btn' + i + '" onclick="analyzeSeveralTracks(\'' + i + '\',\'' + type + '\')" class="over-text3" data-id="' + 
+                                                                                       items[i].id + '" data-name="' + items[i].name + '">Features</button>' +
+
+                            "<div id='myModal' class='modal'>" +
+                              "<div class='modal-content'>" +
+                                "<span class='close'>&times;</span>" +
+                                "<p id='modal-text'></p>" +
+                              "</div>" +
+                            "</div>" +
+
+                          "</div>" +  
+                          "<p>" + items[i].name + "</p>" +
+                        "</div>" +
+                      "</div>"
+                    ); 
+                    // No playlist cover image
+                    } else {
+                      $('#showPlaylists').append(              
+                        "<div class='grid-item'>" +
+                          "<a href=" + items[i].uri + "> <h2> No playlist image </h2> </a>" +
+                          "<p>" + items[i].name + "</p>" +
+                        "</div>"
+                      ); 
+                    }
                   }
                 }
-          });
-
-        var timeRange = 'long_term';
+        });
+        
+        // Used to view your top songs, albums and artists in different time ranges
+        var timeRange = 'short_term';
         load(timeRange);
         
-        document.querySelector("#Time-Range").addEventListener("change",function(e){
-               //here code for change option
-            console.log(this.value);
+        // Time range dropdown selecter
+        document.querySelector("#Time-Range").addEventListener("change",function(e) {
+            // Clears container each time the time range changes
             $(".ta-container").html('');
             $(".songs-container").html('');
-            switch(this.value) {
-                   case '0':
-                   timeRange = 'short_term'
-                   break;
-                
-                   case '1':
-                   timeRange = 'medium_term'
-                   break;
-
-                   default:
-                   timeRange = 'long_term'
-               }
+            timeRange = this.value;
             load(timeRange);
         });
 
-      
+        // Loads with user information on the first login and each time time range is changed
         function load(time) {
-        var map = new Map();
-        var albumInfo = new Set();
-           // Get top tracks(songs) info    
+          var map = new Map();
+          var albumInfo = new Set();
+
+         /**
+           * Returns User's Top TRACKS
+           * Edit Top Tracks design here!
+           */   
            $.ajax({ 
-                url: 'https://api.spotify.com/v1/me/top/tracks?time_range='+time,
+                url: 'https://api.spotify.com/v1/me/top/tracks?time_range=' + time,
                 type: 'GET',
                 headers: {
                   'Authorization' : 'Bearer ' + access_token
@@ -329,17 +362,102 @@
                 contentType:"application/json",
                 success: function(response) {
                   var items = response.items;
+                  var type;
                   for(var i=0; i<items.length; i++) {
-                    outputToDiv(items, i, "#showSongs");
+                    type ='top song'
+                    if(items[i].album.images[0]) {     
+                      $('#showSongs').append(             
+                        "<div class='songs-item'>" +
+                          "<div class='img-container'>" +
+                            "<img class='song-img' src=" + items[i].album.images[0].url + ">" +
+                            "<div class='overlay'>" +
+                              '<button id="track' + i + '" onclick="playThis(\'' + i  + '\',\'' + type + '\')" class="over-text" value="' + items[i].uri +
+                                                                                                                                     '"> Play </button>' +
+                              "<button class='over-text2' id='aa-btn" + i + "' onclick='analyzeTrack(" + i + ")' data-id='" + items[i].id + "' data-name='" +
+                                                                                                                        items[i].name+"'>Features</button>" +
+
+                              "<div id='myModal' class='modal'>" +
+                                "<div class='modal-content'>" +
+                                  "<span class='close'>&times;</span>" +
+                                  "<p id='modal-text'></p>" +
+                                "</div>" +
+                              "</div>" +
+
+                          "</div>" +  
+                        "</div>" +  
+
+                          "<div class='song-text' id='song-text" + i + "'>" +
+                            "<p>" + items[i].name + "</p>" +
+                          "</div>" +
+                        "</div>"    
+                      );
+                    // No album image
+                    } else {
+                      $('#showSongs').append(                             
+                        "<div class='songs-item'>" +
+                          "<a href=" + items[i].uri + "> <h2> No album image </h2> </a>" +
+                          "<div id='song-text'>" +
+                            "<p>" + items[i].name + "</p>" +
+                          "</div>" +
+                        "</div>"
+                      );
+                    }
+                    // Artists for top tracks
+                    for(var j=0; j< items[i].album.artists.length; j++) {
+                      $('#song-text'+i).append(
+                        "<p> Artist: " +items[i].album.artists[j].name + "</p>" + "</div>"
+                      );
+                    }
                   }
-                  // Get top albums
+                
+                /**
+                  * Returns User's Top ALBUMS (calculated from user's top tracks)
+                  * Edit Top Albums design here!
+                  */  
                   map =  findTopAlbums(map, items);
                   for(var i=0; i<map.length; i++) {
-                    outputToDiv(map[i], 0, "#showAlbums");
+                    type='album';
+                    if(map[i][0].images[0]) {           
+                      $('#showAlbums').append(                
+                        "<div class='grid-item'>" +
+                          "<div class='img-container'>" +
+                            "<img class='song-img' src=" + map[i][0].images[0].url + ">" +
+                            "<div class='overlay'>" +
+                              '<button id="album' + i + '" onclick="playThis(\'' + i  + '\',\'' + type + '\')" class="over-text" value="' + 
+                                                                                              map[i][0].uri + '"> Play </button>' +
+                              '<button id="al' + i + '" onclick="showSongs(\'' + i  + '\',\'' + type + '\')" class="over-text2" data-id="' + map[i][0].id + 
+                                                                                             '" data-name="' + map[i][0].name + '"> Show songs </button>' +
+                         
+                              "<div id='myModal' class='modal'>" +
+                                "<div class='modal-content'>" +
+                                  "<span class='close'>&times;</span>" +
+                                  "<p id='modal-text'></p>" +
+                                "</div>" +
+                              "</div>" +
+
+                            "</div>" +  
+                          "</div>" +              
+                          "<p>" + map[i][0].name + "</p>" +
+                        "</div>" 
+                      );
+
+                    // No album image
+                    } else {
+                      $('#showAlbums').append(               
+                        "<div class='grid-item'>" +
+                          "<a href=" + map[i][0].uri + "> <h2> No album image </h2> </a>" +
+                          "<p>" + map[i][0].name + "</p>" +
+                        "</div>"
+                      );
+                    }
                   }
                 }
             });
-           // Get top artists info
+         
+         /**
+           * Returns User's Top ARTISTS
+           * Edit Top Artists design here!
+           */ 
            $.ajax({
                 url: 'https://api.spotify.com/v1/me/top/artists?time_range='+time,
                 type: 'GET',
@@ -348,18 +466,46 @@
                 },
                 contentType:"application/json",
                 success: function(response) {
-                  $('#login').hide();
-                  $('#loggedin').show();
-                  $('#search-bar').show();
-                  
                   var items = response.items;
+                  var type;
                   for(var i=0; i<items.length; i++) {
-                    outputToDiv(items, i, "#showArtists");
+                    type='artists';
+                    if(items[i].images[0]) {
+                      $('#showArtists').append(                
+                        "<div class='grid-item'>" +
+                          "<div class='img-container'>" +
+                            "<img class='song-img' src=" + items[i].images[0].url + ">" +
+                            "<div class='overlay'>" +
+                              '<button id="artists' + i + '" onclick="playThis(\'' + i  + '\',\'' + type + '\')" class="over-text" value="' + items[i].uri + 
+                                                                                                                                       '"> Play </button>' +
+
+                               "<div id='myModal' class='modal'>" +
+                                 "<div class='modal-content'>"+
+                                   "<span class='close'>&times;</span>"+
+                                   "<p id='modal-text'></p>"+
+                                 "</div>"+
+                               "</div>"+
+
+                            "</div>"+  
+                          "</div>"+              
+                          "<p>" + items[i].name + "</p>" +
+                        "</div>"
+                      );
+                    // No album image
+                    } else {
+                      $('#showArtists').append(               
+                       "<div class='grid-item'>" +
+                         "<a href=" + items[i].uri + "> <h2> No album image </h2> </a>" +
+                         "<p>" + items[i].name + "</p>" +
+                       "</div>"
+                      );
+                    } 
                   }
                 },
             });
         
         }
+
            // Display options to switch playbacks (Example: Web, Mobile, App)
            var clients = new Set();
            // If you're already listening to spotify, it will show you the active clients
@@ -884,149 +1030,8 @@
                "</div>"
               );
             }
-          // Edit Top Songs Design Here!!!!
-          } else if(id==="#showSongs") {
-              type ='top song'
-              if(items[i].album.images[0]) {     
-                $(id).append(             
-                    "<div class='songs-item'>" +
-                      "<div class='img-container'>" +
-                        "<img class='song-img' src=" + items[i].album.images[0].url + ">" +
-                        "<div class='overlay'>" +
-                        '<button id="track' + i +'" onclick="playThis(\'' + i  +'\',\'' + type + '\')" class="over-text" value="'+items[i].uri+'"> Play </button>' +
-
-                         "<button class='over-text2' id='aa-btn"+i+"' onclick='analyzeTrack("+ i +")' data-id='"+ items[i].id + "' data-name='" +items[i].name+"'>Features</button>" +
-
-                         "<div id='myModal' class='modal'>"+
-
-                           "<div class='modal-content'>"+
-                             "<span class='close'>&times;</span>"+
-                             "<p id='modal-text'></p>"+
-                           "</div>"+
-                         "</div>"+
-                       "</div>"+  
-                    "</div>"+  
-
-                      "<div class='song-text' id='song-text" + i + "'>" +
-                        "<p>" + items[i].name + "</p>" +
-                      "</div>" 
-                );
-               for(var j=0; j< items[i].album.artists.length; j++) {
-                       $('#song-text'+i).append(
-                        "<p> Artist: " +items[i].album.artists[j].name + "</p>" + "</div>"
-                       );
-                }
-              // No album image
-              } else {
-                $(id).append(                             
-                    "<div class='songs-item'>" +
-                      "<a href=" + items[i].uri + "> <h2> No album image </h2> </a>" +
-                      "<div id='song-text'>" +
-                        "<p>" + items[i].name + "</p>" +
-                      "</div>" +
-                    "</div>"
-                );
-            }
-          // Edit Top Albums Design Here!!!!
-          } else if(id==="#showAlbums") {  
-              type='album';
-              if(items[i].images[0]) {           
-                $(id).append(                
-                  "<div class='grid-item'>" +
-                     "<div class='img-container'>" +
-                        "<img class='song-img' src=" + items[i].images[0].url + ">" +
-                        "<div class='overlay'>" +
-                        '<button id="album' + i +'" onclick="playThis(\'' + i  +'\',\'' + type + '\')" class="over-text" value="'+items[i].uri+'"> Play </button>' +
-                        '<button id="al'+i+'" onclick="showSongs(\'' + i  +'\',\'' + type + '\')" class="over-text2" data-id="'+ items[i].id + '" data-name="' +items[i].name+'">Show songs</button>' +
-                         "<div id='myModal' class='modal'>"+
-
-                           "<div class='modal-content'>"+
-                             "<span class='close'>&times;</span>"+
-                             "<p id='modal-text'></p>"+
-                           "</div>"+
-                         "</div>"+
-                       "</div>"+  
-                    "</div>"+              
-                    "<p>" + items[i].name + "</p>" +
-                  "</div>"
-                );
-
-              // No album image
-              } else {
-                $(id).append(               
-                  "<div class='grid-item'>" +
-                      "<a href=" + items[i].uri + "> <h2> No album image </h2> </a>" +
-                      "<p>" + items[i].name + "</p>" +
-                  "</div>"
-                );
-            }
-          // Edit Top Artists Design Here!!!!
-          } else if (id==="#showArtists") {
-            type='artists';
-            if(items[i].images[0]) {
-            $(id).append(                
-                 "<div class='grid-item'>" +
-                      "<div class='img-container'>" +
-                        "<img class='song-img' src=" + items[i].images[0].url + ">" +
-                        "<div class='overlay'>" +
-                        '<button id="artists' + i +'" onclick="playThis(\'' + i  +'\',\'' + type + '\')" class="over-text" value="'+items[i].uri+'"> Play </button>' +
-
-                         "<div id='myModal' class='modal'>"+
-
-                           "<div class='modal-content'>"+
-                             "<span class='close'>&times;</span>"+
-                             "<p id='modal-text'></p>"+
-                           "</div>"+
-                         "</div>"+
-                       "</div>"+  
-                    "</div>"+              
-                    "<p>" + items[i].name + "</p>" +
-                 "</div>"
-                );
-            } else {
-            $(id).append(               
-                "<div class='grid-item'>" +
-                  "<a href=" + items[i].uri + "> <h2> No album image </h2> </a>" +
-                  "<p>" + items[i].name + "</p>" +
-                "</div>"
-                );
-            }
-          // Edit Playlists Design Here!!!!   
-          } else {
-            type ='playlist';
-           if(items[i].images[0]) {
-           $(id).append(        
-                "<div class='grid-item'>" +
-                    "<div class='pl-img-container'>" +
-                        "<img class='pl-img' src=" + items[i].images[0].url + "> </a>" +
-                        "<div class='pl-overlay'>" +
-                          '<button id="playlist' + i +'" onclick="playThis(\'' + i  +'\',\'' + type + '\')" class="over-text" value="'+items[i].uri+'"> Play </button>' +
-                          '<button id="pl'+i+'" onclick="showSongs(\'' + i  +'\',\'' + type + '\')" class="over-text2" data-id="'+ items[i].id + '" data-name="' +items[i].name+'">Show songs</button>' +
-                          '<button id="playlist-btn'+i+'" onclick="analyzeSeveralTracks(\'' + i  +'\',\'' + type + '\')" class="over-text3" data-id="'+ items[i].id +'" data-name="' +items[i].name+'">Features</button>' +
-
-                         "<div id='myModal' class='modal'>"+
-
-                           "<div class='modal-content'>"+
-                             "<span class='close'>&times;</span>"+
-                             "<p id='modal-text'></p>"+
-                           "</div>"+
-                         "</div>"+
-                       "</div>"+  
-
-                    
-                    "<p>" + items[i].name + "</p>" +
-                "</div>"
-                ); 
-           // No playlist cover image
-           } else {
-           $(id).append(              
-                "<div class='grid-item'>" +
-                  "<a href=" + items[i].uri + "> <h2> No playlist image </h2> </a>" +
-                  "<p>" + items[i].name + "</p>" +
-                "</div>"
-                ); 
-           }      
-          }
+          }  
+          
         }
       } else {
         // render initial screen
